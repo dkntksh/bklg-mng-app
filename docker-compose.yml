@@ -1,0 +1,79 @@
+version: '3'
+
+services:
+  # フロントエンド
+  frontend:
+    container_name: frontend-nuxt
+    # Dockerfileの場所
+    build: ./frontend
+    tty: true
+    # コンテナ起動時のコマンド
+    command: npm run dev
+    # ホストOSとコンテナ内でソースコードを共有
+    volumes:
+      - ./frontend:/app
+    # コンテナ内部の3000を外部から9000でアクセス
+    ports:
+      - "3000:3000"
+    environment:
+     - CHOKIDAR_USEPOLLING=true
+     - discovery.type=single-node
+     - http.host=0.0.0.0
+     - http.port=3000
+     - "http.cors.allow-origin=http://localhost"
+     - "http.cors.enabled=true"
+     - "http.cors.allow-headers=X-Requested-With,X-Auth-Token,Content-Type,Content-Length,Authorization"
+     - "http.cors.allow-credentials=true"
+    stdin_open: true
+  # DB
+  db:
+    container_name: db-mysql
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE: bklg_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: rootpassword
+      command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    expose:
+      - 3306
+    ports:
+      - 3306:3306
+    volumes:
+      # 起動スクリプト
+      - ./db/mysql/initdb:/docker-entrypoint-initdb.d
+      # MySQLの設定ファイル
+      - ./db/mysql/config:/etc/mysql/conf.d
+      # DBの永続化
+      - mysql_db:/var/lib/mysql
+  # バックエンド
+  backend:
+    container_name: backend-spring-boot
+    build: ./backend
+    depends_on:
+      # mysqlが起動してから、appを起動
+      - db
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./backend:/app
+    working_dir: /app/backend
+    restart: always
+    # 起動時のコマンド
+    command: ./mvnw spring-boot:run
+    environment:
+      DATASOURCE: jdbc:mysql://db-mysql:3306/bklg_db
+  # nginx
+  nginx:
+    image: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      - TZ=Asia/Tokyo
+
+volumes:
+  mysql_db:
+    driver: local
