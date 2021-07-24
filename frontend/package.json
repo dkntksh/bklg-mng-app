@@ -1,0 +1,23 @@
+{
+  "name": "backlog app demo",
+  "version": "1.0.0",
+  "description": "backlog use app",
+  "author": "kazuya.iizuka",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "generate": "nuxt generate"
+  },
+  "dependencies": {
+    "@nuxtjs/axios": "^5.13.6",
+    "cookie-universal-nuxt": "^2.1.5",
+    "nuxt": "^2.0.0",
+    "vue-confirm-dialog": "^1.0.2"
+  },
+  "devDependencies": {
+    "@nuxt/typescript-build": "^0.6.0",
+    "@nuxtjs/vuetify": "^1.0.0"
+  }
+}
